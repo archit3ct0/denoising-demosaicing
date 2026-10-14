@@ -5,7 +5,7 @@ tags: [docs]
 
 # Evaluation Metrics
 > [!WARNING]
-> This is all mostly noodling right now.
+> This is all mostly noodling around right now.
 
 <br>
 
@@ -32,3 +32,4 @@ Not sure. Possibly:
 - What is scale of noise and error introduced relative to data? SNR? Artificial Error-to-noise ratio?
 - Depending on how fast the images are taken relative to the sample noise, drizzling may help improve resolution without “guessing” with demosaicing.
 - Are we measuring spatial or temporal noise of the sample? Denoising and combined steps (JDD) are going to flatten spatial noise, whether sample or sensor, without discerning between them.
+- Are learning methods deterministic? Does it matter?
