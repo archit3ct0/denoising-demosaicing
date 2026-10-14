@@ -17,31 +17,45 @@ This list is split into demosaicing-only methods, which only de-Bayer raw images
 ##### Overview
 ##### Notes
 
+<br>
+
 #### Improved Linear Demosaicing
 ##### Overview
 ##### Notes
-- [Paper](https://www.microsoft.com/en-us/research/wp-
-content/uploads/2016/02/Demosaicing_ICASSP04.pdf)
+- [Paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/Demosaicing_ICASSP04.pdf)
+
+<br>
 
 #### Adaptive Homogeneity-Directed Demosaicing (AHD)
 ##### Overview
 ##### Notes
 - [Whitepaper](https://ieeexplore.ieee.org/document/1395991)
 
+<br>
+
 #### Variable Number of Gradient (VNG)
 ##### Overview
 ##### Notes
+
+<br>
 
 #### Patterned Pixel Grouping (PPG)
 ##### Overview
 ##### Notes
 
-#### High Quality Linear Interpolation (HQLI)
+<br>
 
+#### High Quality Linear Interpolation (HQLI)
+##### Overview
+##### Notes
+
+<br>
 
 #### Directional Filtering and a Posteriori Decision (DFPD)
 ##### Overview
 ##### Notes
+
+<br>
 
 #### Multiple Gradients (MG)
 ##### Overview
@@ -55,6 +69,8 @@ content/uploads/2016/02/Demosaicing_ICASSP04.pdf)
 ##### Overview
 ##### Notes
 - [Paper](https://www.researchgate.net/publication/317244370_Denoising_Algorithm_for_CFA_Image_Sensors_Considering_Inter-Channel_Correlation)
+
+<br>
 
 #### DTDeMo
 ##### Overview
@@ -70,15 +86,21 @@ content/uploads/2016/02/Demosaicing_ICASSP04.pdf)
 ##### Notes
 - [Paper](https://www.sciencedirect.com/science/article/abs/pii/S0925231221001181)
 
+<br>
+
 #### Joint Demosaicing and Denoising Light (JDD-LI)
 ##### Overview
 ##### Notes
 - [Paper](https://www.sciencedirect.com/science/article/pii/S1047320326002191?utm_source=chatgpt.com)
 
+<br>
+
 #### Mutual Guidance of COlor Channels (MGCC)
 ##### Overview
 ##### Notes
 - [Paper](https://www.sciencedirect.com/science/article/abs/pii/S0165168422002134)
+
+<br>
 
 #### Unified Multi-bayer Demosaicing (UMBD)
 ##### Overview
