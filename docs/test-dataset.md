@@ -14,20 +14,22 @@ There are a handful of common image sets that come up with some frequency. We us
 
 #### Kodak Lossless True Color Image Suite
 
-![alt text](kodak_reference_images_mosaic.png)
+![alt text](images/kodak_reference_images_mosaic.png)
 
 By far the most common set of images used for compression, denoising, and image modification algorithm assessment.
 - https://r0k.us/graphics/kodak/
 - https://github.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite
 
+<br>
+
 #### IMAX
 
-![alt text](imax_reference_images_mosaic.png)
+![alt text](images/imax_reference_images_mosaic.png)
 
 This gets mentioned a lot but I can't find it? It maybe comes from here: https://www.spiedigitallibrary.org/conference-proceedings-of-spie/6822/1/Image-demosaicing-a-systematic-survey/10.1117/12.766768.full
 
 
-<br>
+***
 
 ### Methods for Applying Noise and Mosaicing
 
