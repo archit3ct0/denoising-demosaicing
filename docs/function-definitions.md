@@ -1,15 +1,16 @@
+---
+title: Denoising and Demosaicing Methods
+tags: [docs]
+---
 
-
-
-
-
-
+# Function Definitions
+Toolkit functions and helpers.
 
 ***
 
 ## Helper Functions
 
-#### generate_mosaic(*image, bayer_pattern="rggb"*)
+> #### generate_mosaic(*image, bayer_pattern='rggb'*)
 Generate mosaiced image from an input image (as though it was captured through a Bayer filter). Filter parameters are configurable.
 
 **Parameters:**
@@ -17,7 +18,7 @@ Generate mosaiced image from an input image (as though it was captured through a
 &emsp;&emsp;&emsp;&emsp;Input image (three channel, RGB)
 
 &emsp;&emsp;**bayer_pattern : *string***
-&emsp;&emsp;&emsp;&emsp;Bayer pattern. Accepts "rggb" or "bggr".
+&emsp;&emsp;&emsp;&emsp;Bayer pattern ordering. Accepts: **'rggb'**, **'bggr'**, **'rgbg'**, **'grbg'**
 
 **Returns:**
 &emsp;&emsp;**result : *NumPy array***
@@ -32,7 +33,7 @@ Generate mosaiced image from an input image (as though it was captured through a
 
 ## Documentation & Templates
 
-#### documentation_template(*parameters=defaults*)
+> #### documentation_template(*parameters='defaults'*)
 Function Description
 
 **Parameters:**
