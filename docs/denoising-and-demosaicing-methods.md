@@ -15,6 +15,7 @@ This list is split into demosaicing-only methods, which only de-Bayer raw images
 
 #### Bilinear
 ##### Overview
+![alt text](images/demosaicing_bilinear.png)
 ##### Notes
 
 <br>
