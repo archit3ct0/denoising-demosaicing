@@ -5,11 +5,11 @@
 
 
 
+***
 
+## Helper Functions
 
-
-
-#### generate-mosaic(*image, bayer_pattern="rggb"*)
+#### generate_mosaic(*image, bayer_pattern="rggb"*)
 Generate mosaiced image from an input image (as though it was captured through a Bayer filter). Filter parameters are configurable.
 
 **Parameters:**
@@ -26,7 +26,13 @@ Generate mosaiced image from an input image (as though it was captured through a
 
 ***
 
-#### documentation-template(*parameters=defaults*)
+## Method Modules
+
+***
+
+## Documentation & Templates
+
+#### documentation_template(*parameters=defaults*)
 Function Description
 
 **Parameters:**
