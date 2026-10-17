@@ -10,7 +10,7 @@ Toolkit functions and helpers.
 
 ## Helper Functions
 
-#### generate_mosaic(*image, bayer_pattern='RGGB'*)
+### generate_mosaic(*image, bayer_pattern='RGGB'*)
 Generate mosaiced image from an input image (as though it was captured through a Bayer filter). Filter parameters are configurable.
 
 **Parameters:**
@@ -34,7 +34,7 @@ Generate mosaiced image from an input image (as though it was captured through a
 
 ## Method Modules
 
-#### bilinear(*image*)
+### bilinear(*image*)
 Implements bilinear (nearest-neighbor) interpolative demosaicing. Very simple and computationally light, but prone to artifacts and blurring (not edge-aware).
 
 **Parameters:**
@@ -51,7 +51,7 @@ Implements bilinear (nearest-neighbor) interpolative demosaicing. Very simple an
 
 <br>
 
-#### improved_linear(*image*)
+### improved_linear(*image*)
 Implements improved linear interpolative demosaicing (Microsoft Research). Simple and computationally light, and exhibits much less artifacting than bilinear and even some nonlinear methods.
 
 **Parameters:**
@@ -75,7 +75,7 @@ Implements improved linear interpolative demosaicing (Microsoft Research). Simpl
 > [!NOTE]
 > Templates to copy for creating documentation:
 
-#### documentation_template(*parameters='defaults'*)
+### documentation_template(*parameters='defaults'*)
 Function Description
 
 **Parameters:**
