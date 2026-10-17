@@ -72,7 +72,7 @@ Implements improved linear interpolative demosaicing (Microsoft Research). Simpl
 
 ## Documentation & Templates
 
-> [!INFO]
+> [!NOTE]
 > Templates to copy for creating documentation:
 
 #### documentation_template(*parameters='defaults'*)
