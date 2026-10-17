@@ -15,13 +15,20 @@ This list is split into demosaicing-only methods, which only de-Bayer raw images
 
 #### Bilinear
 ##### Overview
-![alt text](images/demosaicing_bilinear.png)
+| ![alt text](images/demosaicing_bilinear.png) |
+|:--:|
+| *Bilinear interpolation process (Crafting Pixels)* |
+
 ##### Notes
 
 <br>
 
 #### Improved Linear Demosaicing
 ##### Overview
+| ![Filter coefficients for improved linear demosaicing (Microsoft Research)](images\demosaicing_improved_linear.png) |
+|:--:| 
+| *Filter coefficients for improved linear demosaicing (Microsoft Research)* |
+
 ##### Notes
 - [Paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/Demosaicing_ICASSP04.pdf)
 

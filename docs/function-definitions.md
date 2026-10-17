@@ -42,6 +42,19 @@ Implements bilinear (nearest-neighbor) interpolative demosaicing. Very simple an
 
 <br>
 
+> #### improved_linear(*image*)
+Implements improved linear interpolative demosaicing (Microsoft Research). Simple and computationally light, and exhibits much less artifacting than bilinear and even some nonlinear methods.
+
+**Parameters:**
+&emsp;&emsp; **image : *NumPy array***
+&emsp;&emsp;&emsp;&emsp; Input image to demosaic (single channel)
+
+**Returns:**
+&emsp;&emsp; **result : *NumPy array***
+&emsp;&emsp;&emsp;&emsp; Reconstructed output image (three channel, RGB)
+
+<br>
+
 ***
 
 ## Documentation & Templates
