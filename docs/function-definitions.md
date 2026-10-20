@@ -15,9 +15,9 @@ Generate mosaiced image from an input image (as though it was captured through a
 
 **Parameters:**
 
-&emsp;&emsp; **image : *NumPy array***
+&emsp;&emsp; **image : *NumPy array [n, m, 3]***
 
-&emsp;&emsp;&emsp;&emsp; Input image (three channel, RGB)
+&emsp;&emsp;&emsp;&emsp; Input image (three channel, RGB). Accepts array of images.
 
 &emsp;&emsp; **bayer_pattern : *string***
 
@@ -25,9 +25,9 @@ Generate mosaiced image from an input image (as though it was captured through a
 
 **Returns:**
 
-&emsp;&emsp; **result : *NumPy array***
+&emsp;&emsp; **result : *NumPy array [n, m]***
 
-&emsp;&emsp;&emsp;&emsp; Mosaiced grayscale image (single channel)
+&emsp;&emsp;&emsp;&emsp; Mosaiced grayscale image (single channel). Can produce array of images.
 
 
 ***
@@ -39,7 +39,7 @@ Implements bilinear (nearest-neighbor) interpolative demosaicing. Very simple an
 
 **Parameters:**
 
-&emsp;&emsp; **image : *NumPy array***
+&emsp;&emsp; **image : *NumPy array [n, m]***
 
 &emsp;&emsp;&emsp;&emsp; Input image to demosaic (single channel)
 
@@ -49,7 +49,7 @@ Implements bilinear (nearest-neighbor) interpolative demosaicing. Very simple an
 
 **Returns:**
 
-&emsp;&emsp; **result : *NumPy array***
+&emsp;&emsp; **result : *NumPy array [n, m, 3]***
 
 &emsp;&emsp;&emsp;&emsp; Reconstructed output image (three channel, RGB)
 
@@ -60,7 +60,7 @@ Implements improved linear interpolative demosaicing (Microsoft Research). Simpl
 
 **Parameters:**
 
-&emsp;&emsp; **image : *NumPy array***
+&emsp;&emsp; **image : *NumPy array [n, m]***
 
 &emsp;&emsp;&emsp;&emsp; Input image to demosaic (single channel)
 
@@ -70,7 +70,7 @@ Implements improved linear interpolative demosaicing (Microsoft Research). Simpl
 
 **Returns:**
 
-&emsp;&emsp; **result : *NumPy array***
+&emsp;&emsp; **result : *NumPy array [n, m, 3]***
 
 &emsp;&emsp;&emsp;&emsp; Reconstructed output image (three channel, RGB)
 
