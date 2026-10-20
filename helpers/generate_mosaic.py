@@ -1,7 +1,6 @@
 import numpy as np
 
 def generate_mosaic(input_images, bayer_pattern = "RGGB"):
-    result_images = []  # Return helper
 
     # Build mosaic pattern on Bayer pattern input
     bayer_filter = np.zeros((2, 2, 3), dtype=np.uint8)
@@ -13,13 +12,16 @@ def generate_mosaic(input_images, bayer_pattern = "RGGB"):
         "GRBG": ((0, 0, 1), (0, 1, 0), (1, 0, 2), (1, 1, 1)),
     }
 
-    if bayer_pattern not in patterns:
+    if bayer_pattern not in patterns:  # A little error checking
         raise ValueError(f"Invalid Bayer pattern: {bayer_pattern}. Supported patterns are: {list(patterns.keys())}")
 
     for row, col, channel in patterns[bayer_pattern]:
         bayer_filter[row, col, channel] = 1
 
+
+
     # Build bayer filter and apply to each image. Dynamic for input arrays containing mixed image sizes
+    result_images = []  # Return helper
     for image in input_images:
         height, width = image.shape[:2]
 
