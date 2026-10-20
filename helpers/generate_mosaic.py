@@ -20,7 +20,7 @@ def generate_mosaic(input_images, bayer_pattern = "RGGB"):
 
 
 
-    # Build bayer filter and apply to each image. Dynamic for input arrays containing mixed image sizes
+    # Build bayer filter and apply to each image. Dynamic size, for input arrays containing mixed image dimensions
     result_images = []  # Return helper
     for image in input_images:
         height, width = image.shape[:2]
