@@ -29,6 +29,26 @@ Generate mosaiced image from an input image (as though it was captured through a
 
 &emsp;&emsp;&emsp;&emsp; Mosaiced grayscale image (single channel). Can produce array of images.
 
+<br>
+
+### split_into_color_channels(*image, bayer_pattern='RGGB'*)
+Split a grayscale (single-channel) mosaiced image into its constituent color channels, as per the Bayer pattern used to mosaic it in the first place (either in-camera or by the mosaic-generation script).
+
+**Parameters:**
+
+&emsp;&emsp; **image : *NumPy array [n, m]***
+
+&emsp;&emsp;&emsp;&emsp; Raw grayscale mosaiced image (single channel)
+
+&emsp;&emsp; **bayer_pattern : *string***
+
+&emsp;&emsp;&emsp;&emsp; Bayer pattern ordering. Accepts: **'RGGB'**, **'BGGR'**, **'GBRG'**, **'GRBG'**
+
+**Returns:**
+
+&emsp;&emsp; **channels : *NumPy array [n, m, 3]***
+
+&emsp;&emsp;&emsp;&emsp; NumPy array of image, split into separate RGB channels as per Bayer pattern applied (passed as argument)
 
 ***
 
