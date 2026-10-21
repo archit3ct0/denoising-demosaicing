@@ -22,7 +22,7 @@ from PIL import Image
 
 
 
-# Import test images (per above, dynamic amount) =====================================================================
+# Import test images ==================================================================================================
 test_images_raw = [np.array(Image.open(os.path.join(test_image_directory, filename)))
                    for filename in os.listdir(test_image_directory)
                    if filename.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".webp"))]
@@ -42,7 +42,7 @@ def process_image(image, pre_denoise=None, demosaic=None, post_denoise=None):
     if demosaic:
         image = getattr(demosaicing_methods, demosaic)(image, bayer_pattern)
 
-    if post_denoise is not None:
+    if post_denoise:
         image = getattr(denoising_methods, post_denoise)(image)
 
     return image
