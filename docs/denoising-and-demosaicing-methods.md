@@ -29,9 +29,9 @@ Estimates missing color values by averaging nearby samples of desired color. Ser
 
 ##### Notes
 
-**Computational Cost:** Low
-**Edge Awareness:** Low
-**Detail Preservation:** Low
+**Computational Cost:** Low,
+**Edge Awareness:** Low,
+**Detail Preservation:** Low,
 **Implementation Complexity:** Low
 
 <br>
@@ -55,9 +55,9 @@ Estimates missing color values by averaging nearby samples of desired color. Ser
 ##### Notes
 - [Paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/Demosaicing_ICASSP04.pdf) (HQLI)
 
-**Computational Cost:** Low
-**Edge Awareness:** Low
-**Detail Preservation:** Moderate
+**Computational Cost:** Low,
+**Edge Awareness:** Low,
+**Detail Preservation:** Moderate,
 **Implementation Complexity:** Moderate
 
 <br>
@@ -79,9 +79,9 @@ Compares horizontal and vertical using homogeneity.
 ##### Notes
 - [Whitepaper](https://ieeexplore.ieee.org/document/1395991)
 
-**Computational Cost:** High
-**Edge Awareness:** High
-**Detail Preservation:** High
+**Computational Cost:** High,
+**Edge Awareness:** High,
+**Detail Preservation:** High,
 **Implementation Complexity:** High
 
 <br>
@@ -101,11 +101,11 @@ Selects a variable set of directions using gradient thresholds.
 
 ##### Notes
 
--[paper](https://ui.adsabs.harvard.edu/abs/1999SPIE.3650...36C/abstract)
+-[Paper](https://ui.adsabs.harvard.edu/abs/1999SPIE.3650...36C/abstract)
 
-**Computational Cost:** Moderate
-**Edge Awareness:** High
-**Detail Preservation:** High
+**Computational Cost:** Moderate,
+**Edge Awareness:** High,
+**Detail Preservation:** High,
 **Implementation Complexity:** Moderate
 
 <br>
@@ -125,11 +125,11 @@ Interpolates green using directional edge measures, then reconstructs red and bl
 
 ##### Notes
 
--[Paper](https://sources.debian.org/src/dcraw/9.28-2/dcraw.c/) (source code)
+-[Source code](https://sources.debian.org/src/dcraw/9.28-2/dcraw.c/)
 
-**Computational Cost:** Low
-**Edge Awareness:** Moderate
-**Detail Preservation:** High
+**Computational Cost:** Low,
+**Edge Awareness:** Moderate,
+**Detail Preservation:** High,
 **Implementation Complexity:** Moderate
 
 <br>
@@ -151,9 +151,9 @@ Improves bilinear demosaicing by adding corrections to estimated color value. Co
 
 - [Paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/Demosaicing_ICASSP04.pdf)
 
-**Computational Cost:** Low
-**Edge Awareness:** Low
-**Detail Preservation:** Moderate
+**Computational Cost:** Low,
+**Edge Awareness:** Low,
+**Detail Preservation:** Moderate,
 **Implementation Complexity:** Moderate
 
 <br>
@@ -172,11 +172,11 @@ Applies directional filters, then makes posteriori decision between estimates
 
 ##### Notes
 
--[paper](https://pubmed.ncbi.nlm.nih.gov/17283772/)
+-[Paper](https://pubmed.ncbi.nlm.nih.gov/17283772/)
 
-**Computational Cost:** Moderate
-**Edge Awareness:** High
-**Detail Preservation:** High
+**Computational Cost:** Moderate,
+**Edge Awareness:** High,
+**Detail Preservation:** High,
 **Implementation Complexity:** High
 
 <br>
@@ -197,9 +197,9 @@ Combines directional estimates using consistency between multiple gradients.
 ##### Notes
 - [Paper](https://pubmed.ncbi.nlm.nih.gov/22868571/)
 
-**Computational Cost:** Moderate
-**Edge Awareness:** High
-**Detail Preservation:** High
+**Computational Cost:** Moderate,
+**Edge Awareness:** High,
+**Detail Preservation:** High,
 **Implementation Complexity:** Moderate
 
 ***
