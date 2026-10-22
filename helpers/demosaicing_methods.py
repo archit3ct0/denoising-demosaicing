@@ -21,6 +21,10 @@ def bilinear(image, bayer_pattern = "RGGB"):
         "GRBG": ([[[0, 1], [0, 0]], [[1, 0], [0, 1]], [[0, 0], [1, 0]]]),
     }
 
+    # Validate Bayer pattern
+    if bayer_pattern not in _BAYER_MASKS:
+        raise ValueError(f"Invalid Bayer pattern: {bayer_pattern}")
+
     # Sliding kernels for regenerating each missing slot in a given color channel
     _CROSS =      np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.float64)
     _DIAGONAL =   np.array([[1, 0, 1], [0, 0, 0], [1, 0, 1]], dtype=np.float64)
@@ -69,7 +73,37 @@ def bilinear(image, bayer_pattern = "RGGB"):
 
 
 def improved_linear(image, bayer_pattern = "RGGB"):
-    pass
+    
+    # Split back into color channels
+    channels = split_into_color_channels(image, bayer_pattern)
+    channels = channels.astype(np.float64)
+
+    height, width, _ = channels.shape
+
+    # Build a mask for each color channel covering the locations of the original photosites.
+    # Uses Bayer pattern so as to not miss valid null data. This is different between Bayer patterns.
+    _BAYER_MASKS = {
+        "RGGB": ([[[1, 0], [0, 0]], [[0, 1], [1, 0]], [[0, 0], [0, 1]]]),
+        "BGGR": ([[[0, 0], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [0, 0]]]),
+        "GBRG": ([[[0, 0], [1, 0]], [[1, 0], [0, 1]], [[0, 1], [0, 0]]]),
+        "GRBG": ([[[0, 1], [0, 0]], [[1, 0], [0, 1]], [[0, 0], [1, 0]]]),
+    }
+
+    # Validate Bayer pattern
+    if bayer_pattern not in _BAYER_MASKS:
+        raise ValueError(f"Invalid Bayer pattern: {bayer_pattern}")
+
+    photosite_mask = np.empty_like(channels)
+    for c, pattern in enumerate(_BAYER_MASKS[bayer_pattern]):
+        photosite_mask[:, :, c] = np.tile(pattern, (height // 2 + 1, width // 2 + 1))[:height, :width]
+
+    demosaiced_image = channels.copy()
+
+    # Define MHC 5x5 filters
+
+    # Apply appropriate filter at each pixel
+    
+    return demosaiced_image
 
 
 
