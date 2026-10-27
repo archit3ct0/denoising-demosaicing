@@ -15,7 +15,7 @@ This list is split into demosaicing-only methods, which only de-Bayer raw images
 
 #### Bilinear
 ##### Overview
-| ![alt text](images/demosaicing_bilinear.png) |
+| ![Bilinear interpolation process](images/demosaicing_bilinear.png) |
 |:--:|
 | *Bilinear interpolation process* [*(Crafting Pixels)*](https://pixelcraft.photo.blog/tag/bilinear-demosaicing/) |
 
@@ -38,7 +38,7 @@ Estimates missing color values by averaging nearby samples of desired color. Ser
 
 #### Improved Linear Demosaicing
 ##### Overview
-| ![Filter coefficients for improved linear demosaicing (Microsoft Research)](images\demosaicing_improved_linear.png) |
+| ![Filter coefficients for improved linear demosaicing](images/demosaicing_improved_linear.png) |
 |:--:| 
 | *Filter coefficients for improved linear demosaicing* [*(Microsoft Research)*](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/Demosaicing_ICASSP04.pdf) |
 

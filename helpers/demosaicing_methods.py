@@ -107,6 +107,8 @@ def improved_linear(image, bayer_pattern = "RGGB"):
 
 
 
+
+# TODO: Temporary method-test tooling, needs to be removed when actually running the test suite
 import numpy as np
 from PIL import Image
 from pathlib import Path
