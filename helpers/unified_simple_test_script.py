@@ -29,12 +29,12 @@ from skimage.metrics import structural_similarity as ssim
 
 
 # CONFIGURATION ======================================================================================================
-test_image_directory = r"C:\Users\ashto\OneDrive\workspace\dev\personal\research\test data\kodak"    # Directory containing test images
-output_directory = r"C:\Users\ashto\OneDrive\workspace\dev\personal\research\results"
+test_image_directory = r"C:\Users\Ethan\Documents\0_repositories\denoising-demosaicing\test data\kodak"    # Directory containing test images
+output_directory = r"C:\Users\Ethan\Documents\0_repositories\denoising-demosaicing\results"
 image_id = "19"  # Export a particular example image from the input directory
 
 # Choose whether only demosaicing, only denoising, or demosaicing and denoising
-processing_mode = "demosaic"  # "demosaic", "denoise", or "demosaic+denoise"
+processing_mode = "denoise"  # "demosaic", "denoise", or "demosaic+denoise"
 uses_demosaicing = processing_mode in ("demosaic", "demosaic+denoise")
 uses_denoising = processing_mode in ("denoise", "demosaic+denoise")
 if processing_mode not in ("demosaic", "denoise", "demosaic+denoise"):
@@ -48,9 +48,9 @@ data_range = 0                  # Color depth (in steps) of input images. 8-bit 
 
 # denoising_method can be: "NLM", "AnisotropicDiffusion", "TV", "Wavelet" (pip install scikit-image PyWavelets medpy)
 #                          "FFDNet", "DRUNet", "SCUNet"                   (pip install deepinv; torch is already required)
-noise_sigma = 0                 # Std of Gaussian noise added to the mosaic or RGB image, on the 0-255 scale. 0 = no noise.
+noise_sigma = 25                 # Std of Gaussian noise added to the mosaic or RGB image, on the 0-255 scale. 0 = no noise.
 noise_seed = 0                  # Seed for the added noise, so every method is evaluated on identical noisy inputs.
-denoising_method = None        # Denoiser to apply. None = no denoising.
+denoising_method = "Bilateral"        # Denoiser to apply. None = no denoising.
 denoiser_sigma = None           # Noise level (0-255 scale) the denoiser assumes. None = use noise_sigma.
 scunet_weights = "download"     # "download" = deepinv's blind real-noise SCUNet. Or a path to a Gaussian checkpoint, e.g. scunet_color_25.pth from the SCUNet repo.
 
@@ -130,6 +130,15 @@ def denoise_wavelet_bayes(x, sigma):
     from skimage.restoration import denoise_wavelet  # pip install scikit-image PyWavelets
     return denoise_wavelet(x, sigma=sigma, wavelet="db4", mode="soft", method="BayesShrink", convert2ycbcr=True, rescale_sigma=True, channel_axis=-1)
 
+def denoise_bregman(x, sigma):
+    from skimage.restoration import denoise_tv_bregman
+    return denoise_tv_bregman(x, weight=0.75 * sigma, channel_axis=-1)
+
+def denoise_bilateral(x, sigma):
+    from skimage.restoration import denoise_bilateral
+    return denoise_bilateral(x, sigma_color=sigma, channel_axis=-1)
+
+
 # Pretrained networks through deepinv (loaded once, only when selected)
 network_cache = {}
 
@@ -161,11 +170,14 @@ def denoise_network(x, sigma, name):
         output = model(tensor) if name == "SCUNet" else model(tensor, sigma)
     # BCHW -> HWC
     return output.squeeze(0).cpu().numpy().transpose(1, 2, 0)[:height, :width]
+
 DENOISING_METHODS = {
     "NLM": denoise_nlm,                                       # Non-Local Means      - scikit-image
     "AnisotropicDiffusion": denoise_anisotropic_diffusion,    # Perona-Malik         - medpy
     "TV": denoise_tv,                                         # Total Variation      - scikit-image (Chambolle)
     "Wavelet": denoise_wavelet_bayes,                         # Wavelet (BayesShrink)- scikit-image
+    "Bregman": denoise_bregman,                               # Bregman              - scikit-image
+    "Bilateral": denoise_bilateral,                           # Bilateral            - scikit-image
     "FFDNet": lambda x, sigma: denoise_network(x, sigma, "FFDNet"),    # deepinv
     "DRUNet": lambda x, sigma: denoise_network(x, sigma, "DRUNet"),    # deepinv
     "SCUNet": lambda x, sigma: denoise_network(x, sigma, "SCUNet"),    # deepinv
