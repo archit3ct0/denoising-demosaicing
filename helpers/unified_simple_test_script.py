@@ -30,13 +30,13 @@ from skimage.metrics import structural_similarity as ssim
 # CONFIGURATION ======================================================================================================
 
 test_image_directory = r"C:\Users\Ethan\Documents\0_repositories\denoising-demosaicing\test data\kodak"
-output_directory = r"C:\Users\Ethan\Documents\0_repositories\denoising-demosaicing\results"
+output_directory = r"C:\Users\Ethan\Documents\0_repositories\denoising-demosaicing\results\demosaicing-noise"
 
 image_id = "19"
 
 # Processing mode:
 # "demosaic", "denoise", or "demosaic+denoise"
-processing_mode = "denoise"
+processing_mode = "demosaic"
 
 uses_demosaicing = processing_mode in ("demosaic", "demosaic+denoise")
 uses_denoising = processing_mode in ("denoise", "demosaic+denoise")
@@ -46,29 +46,29 @@ if processing_mode not in ("demosaic", "denoise", "demosaic+denoise"):
 
 # Demosaicing
 # "bilinear", "MHC-HQLI", "DDFAPD", "VNG", "EdgeAware", "DJDD-bayer"
-demosaicing_method = "EdgeAware"
+demosaicing_method = "bilinear"
 bayer_pattern = "GRBG"
 
 generate_csv = True
 data_range = 0
 
-# Noise
-noise_sigma = 25
+# Noise testing
+noise_sigmas = [0, 5, 10, 15, 20, 25, 30, 40, 50]
 noise_seed = 0
 
 # Denoising
 # "NLM", "AnisotropicDiffusion", "TV", "Wavelet",
 # "Bregman", "Bilateral", "Gaussian", "Median", "BM3D",
 # "FFDNet", "DRUNet", "SCUNet"
-denoising_method = "BM3D"
+denoising_method = None
 denoiser_sigma = None
 
 # SCUNet weights
 scunet_weights = "download"
 
 # Validate processing mode
-if noise_sigma < 0:
-    raise ValueError("noise_sigma cannot be negative.")
+if any(sigma < 0 for sigma in noise_sigmas):
+    raise ValueError("noise_sigmas cannot be negative.")
 
 if denoiser_sigma is not None and denoiser_sigma < 0:
     raise ValueError("denoiser_sigma cannot be negative.")
@@ -259,23 +259,6 @@ def denoise_image(image, method, sigma):
     return np.clip(output, 0, 1) * data_range
 
 
-# Validate denoising settings
-
-if uses_denoising:
-
-    if denoising_method is None:
-        raise ValueError("Set denoising_method when processing_mode includes denoising.")
-
-    if denoising_method not in DENOISING_METHODS:
-        raise ValueError(f"Unknown denoising method: {denoising_method}. Options: {list(DENOISING_METHODS)}")
-
-    assumed_denoiser_sigma = noise_sigma if denoiser_sigma is None else denoiser_sigma
-
-    if assumed_denoiser_sigma <= 0 and denoising_method != "SCUNet":
-        raise ValueError(f"{denoising_method} needs a noise level above 0.")
-
-
-
 # DEMOSAICING METHODS ================================================================================================
 
 DEMOSAICING_METHODS = {
@@ -381,144 +364,9 @@ def process_image(image, demosaic, image_index=None):
 
 
 
-# PROCESS IMAGES =====================================================================================================
-
-if uses_demosaicing:
-
-    test_images_mosaiced = [mosaicing_CFA_Bayer(image, bayer_pattern) for image in test_images_raw]
-
-    if noise_sigma > 0:
-
-        if demosaicing_method == "DJDD-bayer":
-            raise ValueError("DJDD-bayer re-mosaics the original images, so noise cannot reach it.")
-
-        noise_rng = np.random.default_rng(noise_seed)
-
-        test_images_mosaiced = [add_gaussian_noise(image, noise_sigma, noise_rng) for image in test_images_mosaiced]
-
-    test_images_demosaiced = [process_image(image, demosaicing_method, index) for index, image in enumerate(test_images_mosaiced)]
-
-    test_images_processed = test_images_demosaiced.copy()
-
-else:
-
-    if noise_sigma > 0:
-
-        noise_rng = np.random.default_rng(noise_seed)
-
-        test_images_noisy = [add_gaussian_noise(image, noise_sigma, noise_rng) for image in test_images_raw]
-
-    else:
-
-        test_images_noisy = [image.copy() for image in test_images_raw]
-
-    test_images_processed = test_images_noisy.copy()
-
-
-# Apply denoising if selected
-
-if uses_denoising:
-
-    test_images_processed = [denoise_image(image, denoising_method, assumed_denoiser_sigma) for image in test_images_processed]
-
-else:
-    if noise_sigma > 0:
-        noise_rng = np.random.default_rng(noise_seed)
-        test_images_noisy = [add_gaussian_noise(image, noise_sigma, noise_rng) for image in test_images_raw]
-    else:
-        test_images_noisy = [image.copy() for image in test_images_raw]
-    test_images_processed = test_images_noisy.copy()
-
-# Optional: denoise the images
-if uses_denoising:
-    test_images_processed = [denoise_image(processed, denoising_method, assumed_denoiser_sigma) for processed in test_images_processed]
-
-# EVALUATE METRICS ===================================================================================================
-
-# MSE - Each Color Channel
-
-mse_values_red = np.array([mse(original[..., 0], processed[..., 0]) for original, processed in zip(test_images_raw, test_images_processed)])
-
-mse_values_green = np.array([mse(original[..., 1], processed[..., 1]) for original, processed in zip(test_images_raw, test_images_processed)])
-
-mse_values_blue = np.array([mse(original[..., 2], processed[..., 2]) for original, processed in zip(test_images_raw, test_images_processed)])
-
-
-# MSE - Whole Image
-
-mse_values = np.array([mse(original, processed) for original, processed in zip(test_images_raw, test_images_processed)])
-
-
-# CPSNR - Whole Image
-
-cpsnr_values = np.array([psnr(original, processed, data_range=data_range) for original, processed in zip(test_images_raw, test_images_processed)])
-
-
-# SSIM - Whole Image
-
-ssim_values = np.array([ssim(original, processed, channel_axis=-1, data_range=data_range) for original, processed in zip(test_images_raw, test_images_processed)])
-
-
-
-# METRIC AGGREGATION ================================================================================================
-
-metric_values = {
-    "MSE Red": mse_values_red,
-    "MSE Green": mse_values_green,
-    "MSE Blue": mse_values_blue,
-    "MSE Full": mse_values,
-    "CPSNR": cpsnr_values,
-    "SSIM": ssim_values
-}
-
-metric_summary = {
-    metric: {
-        "mean": np.mean(values),
-        "std": np.std(values, ddof=1 if len(values) > 1 else 0)
-    }
-    for metric, values in metric_values.items()
-}
-
-print("\nMetric Summary:")
-print("-" * 55)
-
-for metric, values in metric_summary.items():
-    print(f"{metric:<15} " + f"Mean: {values['mean']:.6f} | " + f"Std: {values['std']:.6f}")
-
-print("-" * 55)
-
-
-
-# OUTPUT DIRECTORY ================================================================================================
-
-run_name = demosaicing_method if uses_demosaicing else "RGB"
-
-if uses_denoising:
-    run_name += f"+{denoising_method}"
-
-if noise_sigma > 0:
-    run_name += f"_noise{noise_sigma:g}"
-
-method_output_directory = os.path.join(output_directory, run_name)
-
-os.makedirs(method_output_directory, exist_ok=True)
-
-print(f"\nMethod output directory: {method_output_directory}")
-
-
-
-# EXPORT SELECTED IMAGE ============================================================================================
-
-if uses_demosaicing:
-    selected_image_mosaiced = test_images_mosaiced[selected_image_index]
-    selected_image_demosaiced = test_images_demosaiced[selected_image_index]
-
-else:
-    selected_image_noisy = test_images_noisy[selected_image_index]
-
+# PREPARE IMAGE FOR SAVING ===========================================================================================
 
 def prepare_image_for_saving(image, reference_dtype):
-
     image = np.asarray(image)
 
     if np.issubdtype(reference_dtype, np.integer):
@@ -531,136 +379,339 @@ def prepare_image_for_saving(image, reference_dtype):
     return image
 
 
+
+# PROCESS IMAGES =====================================================================================================
+
+if not uses_demosaicing:
+    raise ValueError("This experiment requires demosaicing.")
+
+if uses_denoising:
+    raise ValueError("Denoising must be disabled for demosaicing-only tests.")
+
+if any(sigma < 0 for sigma in noise_sigmas):
+    raise ValueError("Noise levels cannot be negative.")
+
+if demosaicing_method == "DJDD-bayer" and any(sigma > 0 for sigma in noise_sigmas):
+    raise ValueError("DJDD-bayer currently cannot process noisy mosaiced images.")
+
+
+
+# OUTPUT DIRECTORY ===================================================================================================
+
+run_name = demosaicing_method
+
+method_output_directory = os.path.join(output_directory, run_name)
+
+os.makedirs(method_output_directory, exist_ok=True)
+
+print(f"\nDemosaicing method: {demosaicing_method}")
+print(f"Bayer pattern: {bayer_pattern}")
+print(f"Noise levels: {noise_sigmas}")
+print(f"Method output directory: {method_output_directory}")
+
+
+
+# SELECTED IMAGE INFORMATION =========================================================================================
 image_name = os.path.splitext(selected_image_filename)[0]
+selected_image_raw = test_images_raw[selected_image_index]
 
 
-# Save original image
-raw_image_path = os.path.join(method_output_directory, f"{image_name}_raw.tiff")
-Image.fromarray(selected_image_raw).save(raw_image_path)
+# STORE RESULTS ======================================================================================================
+all_noise_results = {}
 
 
-# Save mosaiced and demosaiced images
+# PROCESS EACH NOISE LEVEL ===========================================================================================
+for noise_sigma in noise_sigmas:
+    print("\n" + "=" * 65)
+    print(f"Processing noise sigma: {noise_sigma}")
+    print("=" * 65)
 
-if uses_demosaicing:
+
+    # GAUSSIAN NOISE ==============================================================================================
+    noise_rng = np.random.default_rng(noise_seed)
+
+    test_images_mosaiced = [mosaicing_CFA_Bayer(image, bayer_pattern) for image in test_images_raw]
+
+    if noise_sigma > 0:
+        test_images_mosaiced = [add_gaussian_noise(image, noise_sigma, noise_rng) for image in test_images_mosaiced]
+
+
+    # DEMOSAICING ================================================================================================
+    test_images_demosaiced = [process_image(image, demosaicing_method, index) for index, image in enumerate(test_images_mosaiced)]
+    test_images_processed = test_images_demosaiced.copy()
+
+
+    # EVALUATE METRICS ============================================================================================
+
+    # MSE - Each Color Channel
+    mse_values_red = np.array([mse(original[..., 0], processed[..., 0]) for original, processed in zip(test_images_raw, test_images_processed)])
+    mse_values_green = np.array([mse(original[..., 1], processed[..., 1]) for original, processed in zip(test_images_raw, test_images_processed)])
+    mse_values_blue = np.array([mse(original[..., 2], processed[..., 2]) for original, processed in zip(test_images_raw, test_images_processed)])
+
+    # MSE - Whole Image
+    mse_values = np.array([mse(original, processed) for original, processed in zip(test_images_raw, test_images_processed)])
+
+    # CPSNR - Whole Image
+    cpsnr_values = np.array([psnr(original, processed, data_range=data_range) for original, processed in zip(test_images_raw, test_images_processed)])
+
+    # SSIM - Whole Image
+    ssim_values = np.array([ssim(original, processed, channel_axis=-1, data_range=data_range) for original, processed in zip(test_images_raw, test_images_processed)])
+
+
+    # METRIC AGGREGATION =========================================================================================
+    metric_values = {"MSE Red": mse_values_red, "MSE Green": mse_values_green, "MSE Blue": mse_values_blue, "MSE Full": mse_values, "CPSNR": cpsnr_values, "SSIM": ssim_values}
+
+    metric_summary = {
+        metric: {
+            "mean": np.mean(values),
+            "std": np.std(
+                values,
+                ddof=1 if len(values) > 1 else 0
+            )
+        } for metric, values in metric_values.items()}
+
+    all_noise_results[noise_sigma] = {"metric_values": metric_values, "metric_summary": metric_summary}
+
+
+    # PRINT METRIC SUMMARY =======================================================================================
+
+    print("\nMetric Summary:")
+    print("-" * 55)
+
+    for metric, values in metric_summary.items():
+
+        print(f"{metric:<15} " + f"Mean: {values['mean']:.6f} | " + f"Std: {values['std']:.6f}")
+
+    print("-" * 55)
+
+
+    # CREATE NOISE-SPECIFIC OUTPUT DIRECTORY ======================================================================
+
+    noise_output_directory = os.path.join(method_output_directory, f"noise{noise_sigma:g}")
+
+    os.makedirs(noise_output_directory, exist_ok=True)
+
+
+    # EXPORT SELECTED IMAGE ======================================================================================
+    selected_image_mosaiced = test_images_mosaiced[selected_image_index]
+    selected_image_demosaiced = test_images_demosaiced[selected_image_index]
+
+    # Save original image
+    raw_image_path = os.path.join(noise_output_directory, f"{image_name}_raw.tiff")
+    Image.fromarray(selected_image_raw).save(raw_image_path)
+
+
+    # Prepare mosaiced and demosaiced images
     selected_image_mosaiced = prepare_image_for_saving(selected_image_mosaiced, selected_image_raw.dtype)
     selected_image_demosaiced = prepare_image_for_saving(selected_image_demosaiced, selected_image_raw.dtype)
 
-    mosaiced_image_path = os.path.join(method_output_directory, f"{image_name}_mosaiced.tiff")
-    demosaiced_image_path = os.path.join(method_output_directory, f"{image_name}_demosaiced.tiff")
 
+    # Save mosaiced image
+    mosaiced_image_path = os.path.join(noise_output_directory, f"{image_name}_mosaiced.tiff")
     Image.fromarray(selected_image_mosaiced).save(mosaiced_image_path)
 
-    # Always export the demosaiced image, regardless of denoising mode
+
+    # Save demosaiced image
+    demosaiced_image_path = os.path.join(noise_output_directory, f"{image_name}_demosaiced.tiff")
     Image.fromarray(selected_image_demosaiced).save(demosaiced_image_path)
 
 
-# Save noisy RGB image when demosaicing is not used
-else:
-    selected_image_noisy = prepare_image_for_saving(selected_image_noisy, selected_image_raw.dtype)
-    noisy_image_path = os.path.join(method_output_directory, f"{image_name}_noisy.tiff")
-
-    Image.fromarray(selected_image_noisy).save(noisy_image_path)
-
-
-# Save final processed image
-
-selected_image_processed = prepare_image_for_saving(test_images_processed[selected_image_index], selected_image_raw.dtype)
-
-if uses_denoising:
-    output_suffix = "denoised"
-elif uses_demosaicing:
-    output_suffix = "demosaiced"
-else:
-    output_suffix = "processed"
-
-processed_image_path = os.path.join(method_output_directory, f"{image_name}_{output_suffix}.tiff")
-
-Image.fromarray(selected_image_processed).save(processed_image_path)
-
-
-# Print export information
-
-print("\nSelected image successfully exported:")
-print(f"Raw:        {raw_image_path}")
-
-if uses_demosaicing:
+    # EXPORT INFORMATION
+    print("\nSelected image successfully exported:")
+    print(f"Raw:        {raw_image_path}")
     print(f"Mosaiced:   {mosaiced_image_path}")
     print(f"Demosaiced: {demosaiced_image_path}")
 
-else:
-    print(f"Noisy:      {noisy_image_path}")
 
-print(f"Processed:  {processed_image_path}")
+    # SAVE CSV ================================================================================================
+    if generate_csv:
 
+        date = datetime.now().strftime("%Y-%m-%d")
+        image_directory_name = os.path.basename(os.path.normpath(test_image_directory))
 
+        csv_filename = (f"{image_directory_name}_{demosaicing_method}_" + f"noise{noise_sigma:g}_{date}_{bayer_pattern}.csv")
+        csv_path = os.path.join(noise_output_directory, csv_filename)
 
-# SAVE CSV ==========================================================================================================
-if generate_csv:
+        with open(csv_path, mode="w", newline="", encoding="utf-8") as csv_file:
 
-    date = datetime.now().strftime("%Y-%m-%d")
+            writer = csv.writer(csv_file)
 
-    image_directory_name = os.path.basename(os.path.normpath(test_image_directory))
-
-    csv_filename = f"{image_directory_name}_{run_name}_{date}"
-
-    if uses_demosaicing:
-        csv_filename += f"_{bayer_pattern}"
-
-    csv_filename += ".csv"
-
-    csv_path = os.path.join(method_output_directory, csv_filename)
-
-    with open(csv_path, mode="w", newline="", encoding="utf-8") as csv_file:
-        
-        writer = csv.writer(csv_file)
-
-        # Metadata
-        writer.writerow(["Image Directory", test_image_directory])
-        writer.writerow(["Processing Mode", processing_mode])
-
-        writer.writerow(["Demosaicing Method", demosaicing_method if uses_demosaicing else None])
-
-        writer.writerow(["Bayer Pattern", bayer_pattern if uses_demosaicing else None])
-
-        writer.writerow(["Date", date])
-        writer.writerow(["Data Range", data_range])
-        writer.writerow(["Exported Image", selected_image_filename])
-
-        # Noise and denoising metadata
-        if noise_sigma > 0 or uses_denoising:
+            # Metadata
+            writer.writerow(["Image Directory", test_image_directory])
+            writer.writerow(["Processing Mode", processing_mode])
+            writer.writerow(["Demosaicing Method", demosaicing_method])
+            writer.writerow(["Bayer Pattern", bayer_pattern])
+            writer.writerow(["Date", date])
+            writer.writerow(["Data Range", data_range])
+            writer.writerow(["Exported Image", selected_image_filename])
 
             writer.writerow(["Noise Sigma (0-255 scale)", noise_sigma])
             writer.writerow(["Noise Seed", noise_seed])
 
-            writer.writerow(["Denoising Method", denoising_method if uses_denoising else None])
 
-            if uses_denoising:
-                writer.writerow(["Denoiser Sigma (0-255 scale)", assumed_denoiser_sigma])
+            # OpenCV version
+            if demosaicing_method in ("VNG", "EdgeAware"):
+                import cv2
+                writer.writerow(["OpenCV Version", cv2.__version__])
 
-        # OpenCV version
-        if uses_demosaicing and demosaicing_method in ("VNG", "EdgeAware"):
-            import cv2
-            writer.writerow(["OpenCV Version", cv2.__version__])
+            writer.writerow([])
 
-        writer.writerow([])
-        
-        # Individual image results
-        headers = ["Image", "MSE Red", "MSE Green", "MSE Blue", "MSE Full", "CPSNR", "SSIM"]
 
-        writer.writerow(headers)
+            # Individual Image Results
+            headers = ["Image", "MSE Red", "MSE Green", "MSE Blue", "MSE Full", "CPSNR", "SSIM"]
 
-        for filename, red, green, blue, mse_full, cpsnr, ssim_value in zip(test_image_filenames, mse_values_red, mse_values_green, mse_values_blue, mse_values, cpsnr_values, ssim_values):
+            writer.writerow(headers)
 
-            writer.writerow([filename, red, green, blue, mse_full, cpsnr, ssim_value])
+            for filename, red, green, blue, mse_full, cpsnr, ssim_value in zip(test_image_filenames, mse_values_red, mse_values_green, mse_values_blue, mse_values, cpsnr_values, ssim_values):
+                writer.writerow([filename, red, green, blue, mse_full, cpsnr, ssim_value])
 
-        # Metric summary
-        writer.writerow([])
-        writer.writerow(["Metric Summary"])
-        writer.writerow(["Metric", "Mean", "Standard Deviation"])
-        
-        for metric, values in metric_summary.items():
-            writer.writerow([metric, values["mean"], values["std"]])
 
-    print(f"\nCSV successfully saved to: {csv_path}")
+            # Metric Summary
+            writer.writerow([])
+            writer.writerow(["Metric Summary"])
+            writer.writerow(["Metric", "Mean", "Standard Deviation"])
 
+            for metric, values in metric_summary.items():
+                writer.writerow([metric, values["mean"], values["std"]])
+
+        print(f"\nCSV successfully saved to: {csv_path}")
+
+
+# FINAL SUMMARY ======================================================================================================
+print("\n" + "=" * 65)
+print("ALL DEMOSAICING TESTS COMPLETED")
+print("=" * 65)
+
+print(f"\nDemosaicing method: {demosaicing_method}")
+print(f"Bayer pattern: {bayer_pattern}")
+
+print("\nResults across noise levels:")
+print("-" * 75)
+
+print(f"{'Noise Sigma':<15}" + f"{'MSE Full':<18}" + f"{'CPSNR':<18}" + f"{'SSIM':<18}")
+print("-" * 75)
+
+for noise_sigma, results in all_noise_results.items():
+    summary = results["metric_summary"]
+
+    print(f"{noise_sigma:<15g}" + f"{summary['MSE Full']['mean']:<18.6f}" + f"{summary['CPSNR']['mean']:<18.6f}" + f"{summary['SSIM']['mean']:<18.6f}")
+
+print("-" * 75)
 print("\nProcessing complete.")
+
+
+
+# MASTER RESULTS CSV ================================================================================================
+master_csv_path = os.path.join(output_directory, "master_demosaicing_results.csv")
+
+date = datetime.now().strftime("%Y-%m-%d")
+image_directory_name = os.path.basename(os.path.normpath(test_image_directory))
+
+
+# Define master CSV columns
+master_headers = [
+    "Image Directory",
+    "Demosaicing Method",
+    "Bayer Pattern",
+    "Noise Sigma",
+    "Number of Images",
+    "Date",
+
+    "MSE Red Mean",
+    "MSE Red Std",
+
+    "MSE Green Mean",
+    "MSE Green Std",
+
+    "MSE Blue Mean",
+    "MSE Blue Std",
+
+    "MSE Full Mean",
+    "MSE Full Std",
+
+    "CPSNR Mean",
+    "CPSNR Std",
+
+    "SSIM Mean",
+    "SSIM Std"
+]
+
+
+# Collect results from all noise levels
+new_master_rows = []
+
+for noise_sigma, results in all_noise_results.items():
+    summary = results["metric_summary"]
+
+    row = {
+        "Image Directory": image_directory_name,
+        "Demosaicing Method": demosaicing_method,
+        "Bayer Pattern": bayer_pattern,
+        "Noise Sigma": noise_sigma,
+        "Number of Images": len(test_images_raw),
+        "Date": date,
+
+        "MSE Red Mean": summary["MSE Red"]["mean"],
+        "MSE Red Std": summary["MSE Red"]["std"],
+
+        "MSE Green Mean": summary["MSE Green"]["mean"],
+        "MSE Green Std": summary["MSE Green"]["std"],
+
+        "MSE Blue Mean": summary["MSE Blue"]["mean"],
+        "MSE Blue Std": summary["MSE Blue"]["std"],
+
+        "MSE Full Mean": summary["MSE Full"]["mean"],
+        "MSE Full Std": summary["MSE Full"]["std"],
+
+        "CPSNR Mean": summary["CPSNR"]["mean"],
+        "CPSNR Std": summary["CPSNR"]["std"],
+
+        "SSIM Mean": summary["SSIM"]["mean"],
+        "SSIM Std": summary["SSIM"]["std"]
+    }
+
+    new_master_rows.append(row)
+
+
+# Load existing master results, if available
+existing_master_rows = []
+
+if os.path.isfile(master_csv_path):
+    with open(master_csv_path, mode="r", newline="", encoding="utf-8") as master_file:
+        reader = csv.DictReader(master_file)
+
+        if reader.fieldnames == master_headers:
+            existing_master_rows = list(reader)
+
+        else:
+            raise ValueError("Existing master CSV has an unexpected column structure. Please check or rename the existing file.")
+
+
+# Remove previous results for the same dataset, method and Bayer pattern.
+# This prevents duplicate entries when rerunning an experiment.
+existing_master_rows = [row for row in existing_master_rows if not (row["Image Directory"] == image_directory_name and row["Demosaicing Method"] == demosaicing_method and row["Bayer Pattern"] == bayer_pattern)]
+
+
+# Combine previous results with new results
+combined_master_rows = existing_master_rows + new_master_rows
+
+
+# Sort results for easier comparison
+combined_master_rows.sort(key=lambda row: (row["Image Directory"], row["Bayer Pattern"], row["Demosaicing Method"], float(row["Noise Sigma"])))
+
+# Save master CSV
+with open(master_csv_path, mode="w", newline="", encoding="utf-8") as master_file:
+
+    writer = csv.DictWriter(master_file, fieldnames=master_headers)
+
+    writer.writeheader()
+    writer.writerows(combined_master_rows)
+
+
+print("\n" + "=" * 65)
+print("MASTER RESULTS CSV UPDATED")
+print("=" * 65)
+
+print(f"\nMaster CSV: {master_csv_path}")
+print(f"Total result rows: {len(combined_master_rows)}")
+print(f"New result rows: {len(new_master_rows)}")
