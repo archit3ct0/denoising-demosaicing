@@ -53,7 +53,7 @@ generate_csv = True
 data_range = 0
 
 # Noise testing
-noise_sigmas = [0, 5, 10, 15, 20, 25, 30, 40, 50]
+noise_sigmas = 0 #[0, 5, 10, 15, 20, 25, 30, 40, 50]
 noise_seed = 0
 
 # Denoising
