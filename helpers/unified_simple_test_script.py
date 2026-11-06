@@ -3,7 +3,6 @@
 
 
 # GENERIC IMPORTS ====================================================================================================
-
 import numpy as np
 import os
 import csv
@@ -37,7 +36,6 @@ image_id = "19"
 
 # Processing mode:
 # "demosaic", "denoise", or "demosaic+denoise"
-
 processing_mode = "denoise"
 
 uses_demosaicing = processing_mode in ("demosaic", "demosaic+denoise")
@@ -48,7 +46,6 @@ if processing_mode not in ("demosaic", "denoise", "demosaic+denoise"):
 
 # Demosaicing
 # "bilinear", "MHC-HQLI", "DDFAPD", "VNG", "EdgeAware", "DJDD-bayer"
-
 demosaicing_method = "EdgeAware"
 bayer_pattern = "GRBG"
 
@@ -63,7 +60,6 @@ noise_seed = 0
 # "NLM", "AnisotropicDiffusion", "TV", "Wavelet",
 # "Bregman", "Bilateral", "Gaussian", "Median", "BM3D",
 # "FFDNet", "DRUNet", "SCUNet"
-
 denoising_method = "BM3D"
 denoiser_sigma = None
 
@@ -87,26 +83,17 @@ if uses_demosaicing:
 
 
 # IMPORT TEST IMAGES ==================================================================================================
-
 valid_extensions = (".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif", ".webp")
 
 if not os.path.isdir(test_image_directory):
     raise FileNotFoundError(f"Directory not found: {test_image_directory}")
 
-test_image_filenames = sorted([
-    filename
-    for filename in os.listdir(test_image_directory)
-    if filename.lower().endswith(valid_extensions)
-])
+test_image_filenames = sorted([filename for filename in os.listdir(test_image_directory) if filename.lower().endswith(valid_extensions)])
 
 if not test_image_filenames:
     raise ValueError(f"No test images found in directory: {test_image_directory}")
 
-test_images_raw = [
-    np.array(Image.open(os.path.join(test_image_directory, filename))
-             .convert("RGB"))
-    for filename in test_image_filenames
-]
+test_images_raw = [np.array(Image.open(os.path.join(test_image_directory, filename)).convert("RGB")) for filename in test_image_filenames]
 
 if data_range == 0:
     first_image = test_images_raw[0]
@@ -121,19 +108,12 @@ print(f"Using data_range: {data_range}")
 
 
 # SELECT IMAGE FOR EXPORT ============================================================================================
-
 image_id = os.path.splitext(image_id)[0].lower()
 
-matching_images = [
-    filename for filename in test_image_filenames
-    if os.path.splitext(filename)[0].lower() == image_id
-]
+matching_images = [filename for filename in test_image_filenames if os.path.splitext(filename)[0].lower() == image_id]
 
 if not matching_images:
-    matching_images = [
-        filename for filename in test_image_filenames
-        if os.path.splitext(filename)[0].lower().endswith(image_id)
-    ]
+    matching_images = [filename for filename in test_image_filenames if os.path.splitext(filename)[0].lower().endswith(image_id)]
 
 if not matching_images:
     raise ValueError(f"Could not find image '{image_id}' in {test_image_directory}")
@@ -153,11 +133,7 @@ print(f"Selected example image for export: {selected_image_filename}")
 
 def add_gaussian_noise(image, sigma, rng):
 
-    noisy = (
-        np.asarray(image, dtype=np.float64)
-        + rng.normal(0.0, sigma * data_range / 255.0, np.shape(image))
-    )
-
+    noisy = (np.asarray(image, dtype=np.float64) + rng.normal(0.0, sigma * data_range / 255.0, np.shape(image)))
     noisy = np.clip(noisy, 0, data_range)
 
     if np.issubdtype(test_images_raw[0].dtype, np.integer):
@@ -176,10 +152,7 @@ def denoise_nlm(x, sigma):
 
 def denoise_anisotropic_diffusion(x, sigma):
     from medpy.filter.smoothing import anisotropic_diffusion
-    return np.stack([
-        anisotropic_diffusion(x[..., c], niter=10, kappa=2.0 * sigma, gamma=0.1, option=1)
-        for c in range(3)
-    ], axis=-1)
+    return np.stack([anisotropic_diffusion(x[..., c], niter=10, kappa=2.0 * sigma, gamma=0.1, option=1) for c in range(3)], axis=-1)
 
 
 def denoise_tv(x, sigma):
@@ -217,7 +190,6 @@ def denoise_bm3d(x, sigma):
 
 
 # Pretrained networks through deepinv
-
 network_cache = {}
 
 
@@ -230,21 +202,13 @@ def get_network(name):
         device = "cuda" if th.cuda.is_available() else "cpu"
 
         if name == "FFDNet":
-            model = dinv.models.FFDNet(
-                n_conv_layers=12, nf=96, img_channels=3,
-                pretrained="download", device=device
-            )
+            model = dinv.models.FFDNet(n_conv_layers=12, nf=96, img_channels=3, pretrained="download", device=device)
 
         elif name == "DRUNet":
-            model = dinv.models.DRUNet(
-                in_channels=3, out_channels=3,
-                pretrained="download", device=device
-            )
+            model = dinv.models.DRUNet(in_channels=3, out_channels=3, pretrained="download", device=device)
 
         elif name == "SCUNet":
-            model = dinv.models.SCUNet(
-                in_nc=3, pretrained=scunet_weights, device=device
-            )
+            model = dinv.models.SCUNet(in_nc=3, pretrained=scunet_weights, device=device)
 
         else:
             raise ValueError(f"Unknown network: {name}")
@@ -261,15 +225,8 @@ def denoise_network(x, sigma, name):
 
     height, width, _ = x.shape
 
-    x = np.pad(
-        x,
-        ((0, height % 2), (0, width % 2), (0, 0)),
-        mode="reflect"
-    )
-
-    tensor = th.from_numpy(
-        np.ascontiguousarray(x.transpose(2, 0, 1))
-    ).float().unsqueeze(0).to(device)
+    x = np.pad(x, ((0, height % 2), (0, width % 2), (0, 0)), mode="reflect")
+    tensor = th.from_numpy(np.ascontiguousarray(x.transpose(2, 0, 1))).float().unsqueeze(0).to(device)
 
     with th.no_grad():
         output = model(tensor) if name == "SCUNet" else model(tensor, sigma)
@@ -297,10 +254,7 @@ def denoise_image(image, method, sigma):
 
     x = np.clip(np.asarray(image, dtype=np.float64), 0, data_range) / data_range
 
-    output = np.asarray(
-        DENOISING_METHODS[method](x, sigma / 255.0),
-        dtype=np.float64
-    )
+    output = np.asarray(DENOISING_METHODS[method](x, sigma / 255.0), dtype=np.float64)
 
     return np.clip(output, 0, 1) * data_range
 
@@ -331,12 +285,7 @@ DEMOSAICING_METHODS = {
 }
 
 
-OPENCV_BAYER_NAMES = {
-    "RGGB": "BG",
-    "BGGR": "RG",
-    "GRBG": "GB",
-    "GBRG": "GR",
-}
+OPENCV_BAYER_NAMES = {"RGGB": "BG", "BGGR": "RG", "GRBG": "GB", "GBRG": "GR",}
 
 
 def opencv_demosaic(image, pattern, algorithm):
@@ -353,18 +302,11 @@ def opencv_demosaic(image, pattern, algorithm):
         cfa_dtype = np.uint16
 
     else:
-        raise ValueError(
-            f"OpenCV {algorithm} requires data_range 255"
-            + ("" if algorithm == "VNG" else " or 65535")
-            + f", got {data_range}."
-        )
+        raise ValueError(f"OpenCV {algorithm} requires data_range 255" + ("" if algorithm == "VNG" else " or 65535") + f", got {data_range}.")
 
     cfa = np.clip(np.rint(image), 0, data_range).astype(cfa_dtype)
 
-    code = getattr(
-        cv2,
-        f"COLOR_Bayer{OPENCV_BAYER_NAMES[pattern]}2RGB_{algorithm}"
-    )
+    code = getattr(cv2, f"COLOR_Bayer{OPENCV_BAYER_NAMES[pattern]}2RGB_{algorithm}")
 
     return cv2.cvtColor(cfa, code).astype(np.float64)
 
@@ -386,9 +328,7 @@ if uses_demosaicing and demosaicing_method == "DJDD-bayer":
         djdd_model.eval()
 
     except ImportError as error:
-        raise ImportError(
-            "DJDD model not available. Please install the external implementation."
-        ) from error
+        raise ImportError("DJDD model not available. Please install the external implementation.") from error
 
 
 
@@ -398,9 +338,7 @@ def process_image(image, demosaic, image_index=None):
 
     if demosaic in DEMOSAICING_METHODS:
 
-        return DEMOSAICING_METHODS[demosaic](
-            image, bayer_pattern
-        )
+        return DEMOSAICING_METHODS[demosaic](image, bayer_pattern)
 
     elif demosaic == "DJDD-bayer":
 
@@ -447,30 +385,18 @@ def process_image(image, demosaic, image_index=None):
 
 if uses_demosaicing:
 
-    test_images_mosaiced = [
-        mosaicing_CFA_Bayer(image, bayer_pattern)
-        for image in test_images_raw
-    ]
+    test_images_mosaiced = [mosaicing_CFA_Bayer(image, bayer_pattern) for image in test_images_raw]
 
     if noise_sigma > 0:
 
         if demosaicing_method == "DJDD-bayer":
-            raise ValueError(
-                "DJDD-bayer re-mosaics the original images, "
-                "so noise cannot reach it."
-            )
+            raise ValueError("DJDD-bayer re-mosaics the original images, so noise cannot reach it.")
 
         noise_rng = np.random.default_rng(noise_seed)
 
-        test_images_mosaiced = [
-            add_gaussian_noise(image, noise_sigma, noise_rng)
-            for image in test_images_mosaiced
-        ]
+        test_images_mosaiced = [add_gaussian_noise(image, noise_sigma, noise_rng) for image in test_images_mosaiced]
 
-    test_images_demosaiced = [
-        process_image(image, demosaicing_method, index)
-        for index, image in enumerate(test_images_mosaiced)
-    ]
+    test_images_demosaiced = [process_image(image, demosaicing_method, index) for index, image in enumerate(test_images_mosaiced)]
 
     test_images_processed = test_images_demosaiced.copy()
 
@@ -480,17 +406,11 @@ else:
 
         noise_rng = np.random.default_rng(noise_seed)
 
-        test_images_noisy = [
-            add_gaussian_noise(image, noise_sigma, noise_rng)
-            for image in test_images_raw
-        ]
+        test_images_noisy = [add_gaussian_noise(image, noise_sigma, noise_rng) for image in test_images_raw]
 
     else:
 
-        test_images_noisy = [
-            image.copy()
-            for image in test_images_raw
-        ]
+        test_images_noisy = [image.copy() for image in test_images_raw]
 
     test_images_processed = test_images_noisy.copy()
 
@@ -499,10 +419,7 @@ else:
 
 if uses_denoising:
 
-    test_images_processed = [
-        denoise_image(image, denoising_method, assumed_denoiser_sigma)
-        for image in test_images_processed
-    ]
+    test_images_processed = [denoise_image(image, denoising_method, assumed_denoiser_sigma) for image in test_images_processed]
 
 else:
     if noise_sigma > 0:
@@ -520,44 +437,26 @@ if uses_denoising:
 
 # MSE - Each Color Channel
 
-mse_values_red = np.array([
-    mse(original[..., 0], processed[..., 0])
-    for original, processed in zip(test_images_raw, test_images_processed)
-])
+mse_values_red = np.array([mse(original[..., 0], processed[..., 0]) for original, processed in zip(test_images_raw, test_images_processed)])
 
-mse_values_green = np.array([
-    mse(original[..., 1], processed[..., 1])
-    for original, processed in zip(test_images_raw, test_images_processed)
-])
+mse_values_green = np.array([mse(original[..., 1], processed[..., 1]) for original, processed in zip(test_images_raw, test_images_processed)])
 
-mse_values_blue = np.array([
-    mse(original[..., 2], processed[..., 2])
-    for original, processed in zip(test_images_raw, test_images_processed)
-])
+mse_values_blue = np.array([mse(original[..., 2], processed[..., 2]) for original, processed in zip(test_images_raw, test_images_processed)])
 
 
 # MSE - Whole Image
 
-mse_values = np.array([
-    mse(original, processed)
-    for original, processed in zip(test_images_raw, test_images_processed)
-])
+mse_values = np.array([mse(original, processed) for original, processed in zip(test_images_raw, test_images_processed)])
 
 
 # CPSNR - Whole Image
 
-cpsnr_values = np.array([
-    psnr(original, processed, data_range=data_range)
-    for original, processed in zip(test_images_raw, test_images_processed)
-])
+cpsnr_values = np.array([psnr(original, processed, data_range=data_range) for original, processed in zip(test_images_raw, test_images_processed)])
 
 
 # SSIM - Whole Image
 
-ssim_values = np.array([
-    ssim(original, processed, channel_axis=-1, data_range=data_range)
-    for original, processed in zip(test_images_raw, test_images_processed)
-])
+ssim_values = np.array([ssim(original, processed, channel_axis=-1, data_range=data_range) for original, processed in zip(test_images_raw, test_images_processed)])
 
 
 
@@ -584,11 +483,7 @@ print("\nMetric Summary:")
 print("-" * 55)
 
 for metric, values in metric_summary.items():
-    print(
-        f"{metric:<15} "
-        f"Mean: {values['mean']:.6f} | "
-        f"Std: {values['std']:.6f}"
-    )
+    print(f"{metric:<15} " + f"Mean: {values['mean']:.6f} | " + f"Std: {values['std']:.6f}")
 
 print("-" * 55)
 
@@ -615,13 +510,10 @@ print(f"\nMethod output directory: {method_output_directory}")
 # EXPORT SELECTED IMAGE ============================================================================================
 
 if uses_demosaicing:
-
     selected_image_mosaiced = test_images_mosaiced[selected_image_index]
-
     selected_image_demosaiced = test_images_demosaiced[selected_image_index]
 
 else:
-
     selected_image_noisy = test_images_noisy[selected_image_index]
 
 
@@ -630,17 +522,10 @@ def prepare_image_for_saving(image, reference_dtype):
     image = np.asarray(image)
 
     if np.issubdtype(reference_dtype, np.integer):
-
         dtype_info = np.iinfo(reference_dtype)
-
-        image = np.clip(
-            np.rint(image),
-            dtype_info.min,
-            dtype_info.max
-        ).astype(reference_dtype)
+        image = np.clip(np.rint(image), dtype_info.min, dtype_info.max).astype(reference_dtype)
 
     else:
-
         image = image.astype(np.float32)
 
     return image
@@ -648,85 +533,61 @@ def prepare_image_for_saving(image, reference_dtype):
 
 image_name = os.path.splitext(selected_image_filename)[0]
 
-raw_image_path = os.path.join(
-    method_output_directory,
-    f"{image_name}_raw.tiff"
-)
 
+# Save original image
+raw_image_path = os.path.join(method_output_directory, f"{image_name}_raw.tiff")
 Image.fromarray(selected_image_raw).save(raw_image_path)
 
 
+# Save mosaiced and demosaiced images
+
 if uses_demosaicing:
+    selected_image_mosaiced = prepare_image_for_saving(selected_image_mosaiced, selected_image_raw.dtype)
+    selected_image_demosaiced = prepare_image_for_saving(selected_image_demosaiced, selected_image_raw.dtype)
 
-    selected_image_mosaiced = prepare_image_for_saving(
-        selected_image_mosaiced,
-        selected_image_raw.dtype
-    )
-
-    selected_image_demosaiced = prepare_image_for_saving(
-        selected_image_demosaiced,
-        selected_image_raw.dtype
-    )
-
-    mosaiced_image_path = os.path.join(
-        method_output_directory,
-        f"{image_name}_mosaiced.tiff"
-    )
+    mosaiced_image_path = os.path.join(method_output_directory, f"{image_name}_mosaiced.tiff")
+    demosaiced_image_path = os.path.join(method_output_directory, f"{image_name}_demosaiced.tiff")
 
     Image.fromarray(selected_image_mosaiced).save(mosaiced_image_path)
 
-    if uses_denoising:
-
-        demosaiced_image_path = os.path.join(
-            method_output_directory,
-            f"{image_name}_demosaiced.tiff"
-        )
-
-        Image.fromarray(selected_image_demosaiced).save(demosaiced_image_path)
+    # Always export the demosaiced image, regardless of denoising mode
+    Image.fromarray(selected_image_demosaiced).save(demosaiced_image_path)
 
 
+# Save noisy RGB image when demosaicing is not used
 else:
-
-    selected_image_noisy = prepare_image_for_saving(
-        selected_image_noisy,
-        selected_image_raw.dtype
-    )
-
-    noisy_image_path = os.path.join(
-        method_output_directory,
-        f"{image_name}_noisy.tiff"
-    )
+    selected_image_noisy = prepare_image_for_saving(selected_image_noisy, selected_image_raw.dtype)
+    noisy_image_path = os.path.join(method_output_directory, f"{image_name}_noisy.tiff")
 
     Image.fromarray(selected_image_noisy).save(noisy_image_path)
 
 
-selected_image_processed = prepare_image_for_saving(
-    test_images_processed[selected_image_index],
-    selected_image_raw.dtype
-)
+# Save final processed image
 
-output_suffix = "denoised" if uses_denoising else "demosaiced"
+selected_image_processed = prepare_image_for_saving(test_images_processed[selected_image_index], selected_image_raw.dtype)
 
-processed_image_path = os.path.join(
-    method_output_directory,
-    f"{image_name}_{output_suffix}.tiff"
-)
+if uses_denoising:
+    output_suffix = "denoised"
+elif uses_demosaicing:
+    output_suffix = "demosaiced"
+else:
+    output_suffix = "processed"
+
+processed_image_path = os.path.join(method_output_directory, f"{image_name}_{output_suffix}.tiff")
 
 Image.fromarray(selected_image_processed).save(processed_image_path)
 
+
+# Print export information
 
 print("\nSelected image successfully exported:")
 print(f"Raw:        {raw_image_path}")
 
 if uses_demosaicing:
-
     print(f"Mosaiced:   {mosaiced_image_path}")
-
-    if uses_denoising:
-        print(f"Demosaiced: {demosaiced_image_path}")
+    print(f"Demosaiced: {demosaiced_image_path}")
 
 else:
-
     print(f"Noisy:      {noisy_image_path}")
 
 print(f"Processed:  {processed_image_path}")
@@ -734,14 +595,11 @@ print(f"Processed:  {processed_image_path}")
 
 
 # SAVE CSV ==========================================================================================================
-
 if generate_csv:
 
     date = datetime.now().strftime("%Y-%m-%d")
 
-    image_directory_name = os.path.basename(
-        os.path.normpath(test_image_directory)
-    )
+    image_directory_name = os.path.basename(os.path.normpath(test_image_directory))
 
     csv_filename = f"{image_directory_name}_{run_name}_{date}"
 
@@ -750,10 +608,7 @@ if generate_csv:
 
     csv_filename += ".csv"
 
-    csv_path = os.path.join(
-        method_output_directory,
-        csv_filename
-    )
+    csv_path = os.path.join(method_output_directory, csv_filename)
 
     with open(csv_path, mode="w", newline="", encoding="utf-8") as csv_file:
         
@@ -763,15 +618,9 @@ if generate_csv:
         writer.writerow(["Image Directory", test_image_directory])
         writer.writerow(["Processing Mode", processing_mode])
 
-        writer.writerow([
-            "Demosaicing Method",
-            demosaicing_method if uses_demosaicing else None
-        ])
+        writer.writerow(["Demosaicing Method", demosaicing_method if uses_demosaicing else None])
 
-        writer.writerow([
-            "Bayer Pattern",
-            bayer_pattern if uses_demosaicing else None
-        ])
+        writer.writerow(["Bayer Pattern", bayer_pattern if uses_demosaicing else None])
 
         writer.writerow(["Date", date])
         writer.writerow(["Data Range", data_range])
@@ -783,58 +632,26 @@ if generate_csv:
             writer.writerow(["Noise Sigma (0-255 scale)", noise_sigma])
             writer.writerow(["Noise Seed", noise_seed])
 
-            writer.writerow([
-                "Denoising Method",
-                denoising_method if uses_denoising else None
-            ])
+            writer.writerow(["Denoising Method", denoising_method if uses_denoising else None])
 
             if uses_denoising:
-                writer.writerow([
-                    "Denoiser Sigma (0-255 scale)",
-                    assumed_denoiser_sigma
-                ])
+                writer.writerow(["Denoiser Sigma (0-255 scale)", assumed_denoiser_sigma])
 
         # OpenCV version
         if uses_demosaicing and demosaicing_method in ("VNG", "EdgeAware"):
-
             import cv2
-
             writer.writerow(["OpenCV Version", cv2.__version__])
 
         writer.writerow([])
         
         # Individual image results
-        headers = [
-            "Image",
-            "MSE Red",
-            "MSE Green",
-            "MSE Blue",
-            "MSE Full",
-            "CPSNR",
-            "SSIM"
-        ]
+        headers = ["Image", "MSE Red", "MSE Green", "MSE Blue", "MSE Full", "CPSNR", "SSIM"]
 
         writer.writerow(headers)
 
-        for filename, red, green, blue, mse_full, cpsnr, ssim_value in zip(
-            test_image_filenames,
-            mse_values_red,
-            mse_values_green,
-            mse_values_blue,
-            mse_values,
-            cpsnr_values,
-            ssim_values
-        ):
+        for filename, red, green, blue, mse_full, cpsnr, ssim_value in zip(test_image_filenames, mse_values_red, mse_values_green, mse_values_blue, mse_values, cpsnr_values, ssim_values):
 
-            writer.writerow([
-                filename,
-                red,
-                green,
-                blue,
-                mse_full,
-                cpsnr,
-                ssim_value
-            ])
+            writer.writerow([filename, red, green, blue, mse_full, cpsnr, ssim_value])
 
         # Metric summary
         writer.writerow([])
@@ -842,14 +659,8 @@ if generate_csv:
         writer.writerow(["Metric", "Mean", "Standard Deviation"])
         
         for metric, values in metric_summary.items():
-
-            writer.writerow([
-                metric,
-                values["mean"],
-                values["std"]
-            ])
+            writer.writerow([metric, values["mean"], values["std"]])
 
     print(f"\nCSV successfully saved to: {csv_path}")
-
 
 print("\nProcessing complete.")
