@@ -11,7 +11,7 @@ from PIL import Image
 
 import torch as th
 
-# MOSAICING (pip install -U colour-demosaicing)
+# DEMOSAICING (pip install -U colour-demosaicing)
 from colour_demosaicing import (
     demosaicing_CFA_Bayer_bilinear,
     demosaicing_CFA_Bayer_Malvar2004,
@@ -50,7 +50,7 @@ data_range = 0                  # Color depth (in steps) of input images. 8-bit 
 #                          "FFDNet", "DRUNet", "SCUNet"                   (pip install deepinv; torch is already required)
 noise_sigma = 25                 # Std of Gaussian noise added to the mosaic or RGB image, on the 0-255 scale. 0 = no noise.
 noise_seed = 0                  # Seed for the added noise, so every method is evaluated on identical noisy inputs.
-denoising_method = "Bilateral"        # Denoiser to apply. None = no denoising.
+denoising_method = "BM3D"        # Denoiser to apply. None = no denoising.
 denoiser_sigma = None           # Noise level (0-255 scale) the denoiser assumes. None = use noise_sigma.
 scunet_weights = "download"     # "download" = deepinv's blind real-noise SCUNet. Or a path to a Gaussian checkpoint, e.g. scunet_color_25.pth from the SCUNet repo.
 
@@ -138,6 +138,18 @@ def denoise_bilateral(x, sigma):
     from skimage.restoration import denoise_bilateral
     return denoise_bilateral(x, sigma_color=sigma, channel_axis=-1)
 
+def denoise_gaussian(x, sigma):
+    return cv2.GaussianBlur(x, (0, 0), sigmaX=sigma, sigmaY=sigma, borderType=cv2.BORDER_REFLECT)
+
+def denoise_median(x, sigma):
+    import cv2
+    return cv2.medianBlur((x * 255).astype(np.uint8), ksize=3) / 255.0
+
+def denoise_bm3d(x, sigma):
+    import bm3d
+    x = x.astype(np.float64) / 255.0
+    sigma_norm = sigma / 255.0
+    return bm3d.bm3d(x, sigma_psd = sigma_norm)
 
 # Pretrained networks through deepinv (loaded once, only when selected)
 network_cache = {}
@@ -178,6 +190,9 @@ DENOISING_METHODS = {
     "Wavelet": denoise_wavelet_bayes,                         # Wavelet (BayesShrink)- scikit-image
     "Bregman": denoise_bregman,                               # Bregman              - scikit-image
     "Bilateral": denoise_bilateral,                           # Bilateral            - scikit-image
+    "Gaussian": denoise_gaussian,                             # Gaussian Blur        - OpenCV
+    "Median": denoise_median,                                 # Median Filter        - OpenCV
+    "BM3D": denoise_bm3d,                                     # Block-Matching 3D  - BM3D
     "FFDNet": lambda x, sigma: denoise_network(x, sigma, "FFDNet"),    # deepinv
     "DRUNet": lambda x, sigma: denoise_network(x, sigma, "DRUNet"),    # deepinv
     "SCUNet": lambda x, sigma: denoise_network(x, sigma, "SCUNet"),    # deepinv
