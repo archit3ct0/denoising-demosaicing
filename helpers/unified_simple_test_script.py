@@ -19,6 +19,7 @@ from colour_demosaicing import (
     demosaicing_CFA_Bayer_Menon2007,
     mosaicing_CFA_Bayer,
 )
+import demosaicnet # installed externally, DJDD. Can comment out this and DJDD section in/before process_image if you don't need it.
 
 # METRICS
 from skimage.metrics import mean_squared_error as mse
@@ -194,7 +195,6 @@ def denoise_wavelet_bayes(x, sigma):
 def denoise_bregman(x, sigma):
     from skimage.restoration import denoise_tv_bregman
     return denoise_tv_bregman(x, weight=0.75 * sigma, channel_axis=-1)
-
 
 def denoise_bilateral(x, sigma):
     from skimage.restoration import denoise_bilateral
@@ -504,7 +504,17 @@ if uses_denoising:
         for image in test_images_processed
     ]
 
+else:
+    if noise_sigma > 0:
+        noise_rng = np.random.default_rng(noise_seed)
+        test_images_noisy = [add_gaussian_noise(image, noise_sigma, noise_rng) for image in test_images_raw]
+    else:
+        test_images_noisy = [image.copy() for image in test_images_raw]
+    test_images_processed = test_images_noisy.copy()
 
+# Optional: denoise the images
+if uses_denoising:
+    test_images_processed = [denoise_image(processed, denoising_method, assumed_denoiser_sigma) for processed in test_images_processed]
 
 # EVALUATE METRICS ===================================================================================================
 
@@ -746,7 +756,7 @@ if generate_csv:
     )
 
     with open(csv_path, mode="w", newline="", encoding="utf-8") as csv_file:
-
+        
         writer = csv.writer(csv_file)
 
         # Metadata
@@ -792,7 +802,7 @@ if generate_csv:
             writer.writerow(["OpenCV Version", cv2.__version__])
 
         writer.writerow([])
-
+        
         # Individual image results
         headers = [
             "Image",
@@ -830,7 +840,7 @@ if generate_csv:
         writer.writerow([])
         writer.writerow(["Metric Summary"])
         writer.writerow(["Metric", "Mean", "Standard Deviation"])
-
+        
         for metric, values in metric_summary.items():
 
             writer.writerow([
